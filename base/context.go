@@ -255,6 +255,10 @@ func (this *ConfCmd) ParseCmdOptions() {
 		this.Databases = CommaSeparatedListToArray(dbs)
 	}
 
+	if this.Passwd = "" { 
+		fmt.Scanln(&this.Passwd) 
+	}
+	
 	if tbs != "" {
 		this.Tables = CommaSeparatedListToArray(tbs)
 		
