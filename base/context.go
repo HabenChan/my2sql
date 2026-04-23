@@ -336,11 +336,10 @@ func (this *ConfCmd) ParseCmdOptions() {
 
 
 	if this.Mode == "file" {
-
-		if this.StartFile == "" {
-			log.Fatalf("missing binlog file.  -start-file must be specify when -mode=file ")
+		if this.LocalBinFile == "" {
+			log.Fatalf("missing binlog file.  -local-binlog-file must be specify when -mode=file")
 		}
-		this.GivenBinlogFile = this.StartFile
+		this.GivenBinlogFile = this.LocalBinFile
 		if !toolkits.IsFile(this.GivenBinlogFile) {
 			log.Fatalf("%s doesnot exists nor a file\n", this.GivenBinlogFile)
 		} else {
@@ -348,23 +347,10 @@ func (this *ConfCmd) ParseCmdOptions() {
 		}
 	}
 
-	if this.Mode == "file" {
-	        if this.LocalBinFile == "" {
-	                log.Fatalf("missing binlog file.  -local-binlog-file must be specify when -mode=file ")
-	        }
-	        this.GivenBinlogFile = this.LocalBinFile
-	        if !toolkits.IsFile(this.GivenBinlogFile) {
-	                log.Fatalf("%s doesnot exists nor a file\n", this.GivenBinlogFile)
-	        } else {
-	                this.BinlogDir = filepath.Dir(this.GivenBinlogFile)
-	        }
-	}
-
 	
 	this.EventChan = make(chan MyBinEvent, this.Threads*2)
 	this.StatChan = make(chan BinEventStats, this.Threads*2)
 	this.SqlChan = make(chan ForwardRollbackSqlOfPrint, this.Threads*2)
-	this.StatChan = make(chan BinEventStats, this.Threads*2)
 	this.OpenStatsResultFiles()
 	this.OpenTxResultFiles()
 

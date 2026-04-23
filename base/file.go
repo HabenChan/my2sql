@@ -32,6 +32,27 @@ func (this BinFileParser) MyParseAllBinlogFiles(cfg *ConfCmd) {
 	log.Info("start to parse binlog from local files")
 	binlog, binpos := GetFirstBinlogPosToParse(cfg)
 	binBaseName, binBaseIndx := GetBinlogBasenameAndIndex(binlog)
+
+	// When only -start-datetime is given (no explicit file/pos), binary-search
+	// the binlog directory to find the right starting file, skipping older files.
+	if cfg.IfSetStartDateTime && !cfg.IfSetStartFilePos {
+		allFiles, err := GetBinlogFileListFromDir(cfg.BinlogDir, binBaseName)
+		if err != nil {
+			log.Warnf("binary search: failed to list %s: %v, using given file", cfg.BinlogDir, err)
+		} else if len(allFiles) > 0 {
+			idx := BinarySearchBinlogFileMode(allFiles, cfg.BinlogDir, cfg.StartDatetime)
+			foundFile := allFiles[idx]
+			_, foundIndx := GetBinlogBasenameAndIndex(foundFile)
+			if foundIndx != binBaseIndx {
+				log.Infof("binary search: fast-forward from %s to %s (skipped %d files)",
+					filepath.Base(binlog), foundFile, foundIndx-binBaseIndx)
+				binlog = filepath.Join(cfg.BinlogDir, foundFile)
+				binBaseIndx = foundIndx
+				binpos = 4
+			}
+		}
+	}
+
 	log.Info(fmt.Sprintf("start to parse %s %d\n", binlog, binpos))
 
 	for {

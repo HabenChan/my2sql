@@ -12,6 +12,15 @@ import (
 
 func ParserAllBinEventsFromRepl(cfg *ConfCmd) {
 	defer cfg.CloseChan()
+
+	// When only -start-datetime is given (no explicit -start-file), query SHOW BINARY
+	// LOGS and binary-search to find the right starting file, skipping older files.
+	if cfg.IfSetStartDateTime && !cfg.IfSetStartFilePos {
+		if err := AutoDetectReplStartFile(cfg); err != nil {
+			log.Warnf("auto-detect start binlog failed: %v, falling back to default position", err)
+		}
+	}
+
 	cfg.BinlogStreamer = NewReplBinlogStreamer(cfg)
 	log.Info("start to get binlog from mysql")
 	SendBinlogEventRepl(cfg)
